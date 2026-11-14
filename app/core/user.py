@@ -17,3 +17,6 @@ class User:
     
     def set_bio(self, the_bio):
         self.bio = the_bio
+
+    def __str__(self):
+        return f"name: {self.username}, bio: {self.bio}"
