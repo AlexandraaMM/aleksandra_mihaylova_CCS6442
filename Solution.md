@@ -5,7 +5,7 @@ Data Science Toolbox – CCS6442 – Solution
 -	I didn't fork it, because the handout says not to.
 -	I renamed the original remote to "upstream" and added my repository as “origin” so everything I push goes to my repository.
 
-In the repository settings I added the professor as a collaborator and disabled GitHub Actions and Dependabot. The problem I had is that Dependabot still opened pull requests after my first push, because the project has a “dependabot.yml” file. I closed those pull requests without merging them, deleted the dependabot branches, and removed the file in a separate commit on master. I did this before creating develop, so develop did not have this file. I then created “app/core/user.py” on master committed it and pushed master.
+In the repository settings I added the professor as a collaborator and disabled GitHub Actions and Dependabot. I created “app/core/user.py” on master, committed it and pushed master. The problem I had is that Dependabot still opened pull requests after my first push, because the project has a “dependabot.yml” file. I closed those pull requests without merging them, deleted the dependabot branches, and removed the file in a separate commit on master. I did this before creating develop, so develop did not have this file. 
 
 2.	Requirements 2-5 
 -	I created develop locally and pushed it.
@@ -84,5 +84,4 @@ I didn't fix the old commit on the same branch. The pull request was already ope
 -	I merged it into master and tagged it “v1.0.1”
 -	I merged it into develop too, so the next release doesn't bring the bug back.
 -	I merged develop into feature/step-5, so the unfinished feature also has the fix.
--	I noticed later that my hotfix commit message says “not fixed” instead of “now fixed”. I didn’t change it, because the commit was already pushed, merged into master and develop and tagged as v1.0.1. Changing it would mean force pushing master, which is much worse than a typo.
-
+-	I noticed later that my commit message says “not fixed” instead of “now fixed”. I didn’t change it, because the commit was already pushed, merged into master and develop and tagged as v1.0.1. Changing it would mean force pushing master, which is risky for a branch that is already shared, so I kept the commit as it was and I the reviewr know.
