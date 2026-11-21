@@ -84,4 +84,57 @@ I didn't fix the old commit on the same branch. The pull request was already ope
 -	I merged it into master and tagged it “v1.0.1”
 -	I merged it into develop too, so the next release doesn't bring the bug back.
 -	I merged develop into feature/step-5, so the unfinished feature also has the fix.
--	I noticed later that my commit message says “not fixed” instead of “now fixed”. I didn’t change it, because the commit was already pushed, merged into master and develop and tagged as v1.0.1. Changing it would mean force pushing master, which is risky for a branch that is already shared, so I kept the commit as it was and I the reviewr know.
+-	I noticed later that my commit message says “not fixed” instead of “now fixed”. I didn’t change it, because the commit was already pushed, merged into master and develop and tagged as v1.0.1. Changing it would mean force pushing master, which is risky for a branch that is already shared, so I kept the commit as it was and I let the reviewer know.
+
+
+Part 2 - Docker
+
+1.	Work done:
+-	I followed Gitflow for every change in this part.
+-	To replace the database, add the checkstatus container and change the production image I made each of them in a feature branch from develop, opened a pull request and merged it. I used feature branches because these were planned new work, not urgent fixes.
+-	For v1.1.0 I used a release branch to bring the features from develop to master.
+-	For updating the image from 1.0 to 2.0 I used a hotfix branch from master.
+
+2.	Setting up the database - “feature/add-postgres-db”
+-	I renamed the “db” service to “postgres”. I also changed the app's DATABASE_URL from “@db” to “@postgres:5432” and changed depends_on from “db” to “postgres”.
+-	I changed the image from “postgres:11.5-alpine” to “postgres:17-alpine”. I used a fixed version and not latest, because latest can change at any time without warning and the project could break at a certain point.
+-	I removed the “version: 3” line, because Docker showed a warning that it is obsolete, and I removed “:cached”.
+
+3.	Not committing secrets
+-	The original file had the username and password written directly in DATABASE_URL.
+-	I moved the username, password and database name into a “.env” file.
+-	The “.env” file is in “.gitignore” (I checked it with “git check-ignore .env”), so my real passwords are not committed to GitHub.
+-	Instead, I added these variables to “.env.example” with placeholder values (“needs_changing”), so anyone who clones the repository knows which variables they need to set.
+
+4.	The custom container – “feature/add-checkstatus”
+-	I created the “src” folder and wrote “src/checkstatus.sh”. It uses “pg_isready -h postgres -p 5432” to check if the database is ready. If it isn't, it prints a message, waits 2 seconds and checks again. When the database is ready, it prints “Database is ready!” and exits. I added “#!/bin/sh” at the top so the system knows how to run the script.
+-	I created “src/Production-Dockerfile” based on “alpine:3.21”. pg_isready is not included in the image by default, so I installed it.
+-	The Dockerfile copies the script, makes it executable, and uses CMD ["./checkstatus.sh"], so the script runs automatically every time I do “docker compose up”.
+-	In docker-compose.yml I added a “checkstatus” service that builds from “./src” with “Production-Dockerfile” and depends on “postgres”.
+-	When I tested it, the script printed “Database is not ready, checking again in 2 seconds” once, and then “Database is ready!”.
+-	I created “release/1.1.0” from develop, merged it into master and tagged it “v1.1.0”.
+-	I chose 1.1.0, because I added new features and nothing was broken.
+
+5.	Getting ready for production – “feature/production-image”
+-	First I ran “docker run --rm --platform linux/amd64 citycase/assessment2:1.0” and it printed “ERROR VERSION”. I added the screenshot of this output to the description of PR #22.
+-	Then I changed the base image in Production-Dockerfile from “alpine:3.21” to “citycase/assessment2:1.0”.
+-	On Docker Hub this image is only available for linux/amd64, and my Mac has an Apple Silicon (arm64) chip, so I added “platform: linux/amd64” to the checkstatus service, so Docker can run it with emulation.
+-	I tested it and it printed “Database is ready!”.
+
+6.	My mistake – PR #22 merged into master
+-	When I created pull request #22, GitHub set the base branch to master by default and I forgot to change it to develop, so it was merged into master instead of develop.
+-	To fix it, I updated my local master, then switched to develop, merged master into it and pushed develop. After that, both branches had the same code.
+-	Then I tagged master as “v1.2.0” and pushed the tag. I chose 1.2.0, because it was new work, not a bug fix.
+-	I didn't force push, because that would rewrite the history of a shared branch, and I didn't revert, because the change itself was correct and only went into the wrong branch first.
+-	To avoid this next time, I changed the default branch of the repository from master to develop, so new pull requests target develop automatically. I will also always check the base branch before creating a pull request.
+
+7.	Fixing the wrong image
+-	The assignment says that citycase/assessment2:1.0 is outdated and was the wrong image to launch to production. Running it printed “ERROR VERSION”, so master had to be fixed as quickly as possible.
+-	I checked the tags on Docker Hub: “1.0”, “2.0” and “latest”. When I ran “citycase/assessment2:2.0”, it printed “LATEST VERSION – working docker”.
+-	“latest” and “2.0” had the same digest. I still chose “2.0”, because “latest” can point to a different version later without anyone deciding it.
+-	The problem was in production, so I used a hotfix branch from master, not a feature branch from develop.
+-	I created “hotfix/1.2.1”, changed the image to “citycase/assessment2:2.0” and tested it with “docker compose up --build postgres checkstatus”. It printed “Database is ready!”.
+-	I merged the hotfix into master with --no-ff and tagged it “v1.2.1”, because master is production and the fix has to reach the customers.
+-	I also merged it into develop, so the next release doesn't bring the old 1.0 image back.
+-	I chose 1.2.1, because it is only a bug fix and adds nothing new.
+-	I didn't have any merge conflicts in Part 2.
